@@ -1,0 +1,134 @@
+<html>
+<head>
+<title>Node Stats</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet">
+<style>
+* {
+font-family: 'Questrial', sans-serif;
+}
+input {
+	border-radius: 8px;
+	border: 1px solid black;
+	padding: 4px;
+}
+table {
+	width: 90%;
+            border-spacing: 0px;
+            table-layout: fixed;
+            margin-left: auto;
+            margin-right: auto;
+        }
+td {
+	word-wrap: break-word;
+}
+#msgTable {
+	border-radius: 8px;
+	border: 1px solid black;
+	padding: 4px;
+	margin-top: 16px;
+}
+</style>
+<script>
+function isJSON(value)
+{
+	try {  
+		const json = JSON.parse(value);  
+	} catch (e) {  
+		console.log('invalid json[' + e.message + ']: ' + value);
+		return false;
+	}
+	return true;
+}
+
+function addCell(row, value)
+{
+	// Insert a cell at the end of the row
+	var newCell = row.insertCell();
+	// Append a text node to the cell
+	var newText = document.createTextNode(value);
+	newCell.appendChild(newText);
+}
+
+function addMessage(message)
+{
+	var tbodyRef = document.getElementById('msgTable').getElementsByTagName('tbody')[0];
+
+	// Insert a row at the end of table
+	var newRow = tbodyRef.insertRow();
+	addCell(newRow, message);
+	// Insert a cell at the end of the row
+	//var newCell = newRow.insertCell();
+
+	// Append a text node to the cell
+	//var newText = document.createTextNode(message);
+	//newCell.appendChild(newText);
+}
+function addTX(tx)
+{
+	var tbodyRef = document.getElementById('msgTable').getElementsByTagName('tbody')[0];
+
+	// Insert a row at the end of table
+	var newRow = tbodyRef.insertRow();
+	addCell(newRow, tx.id);
+	addCell(newRow, tx.from);
+	addCell(newRow, tx.to);
+	addCell(newRow, tx.amount);
+	// Insert a cell at the end of the row
+	//var newCell = newRow.insertCell();
+
+	// Append a text node to the cell
+	//var newText = document.createTextNode(message);
+	//newCell.appendChild(newText);
+}
+function clk()
+{
+let socket = new WebSocket("ws://localhost:12001");
+
+socket.onopen = function(e) {
+  console.log("[open] Connection established");
+  console.log("Sending to server");
+  socket.send("My name is John");
+};
+
+socket.onmessage = function(event) {
+  console.log(`[message] Data received from server: ${event.data}`);
+  if (isJSON(event.data)) {
+	  const obj = JSON.parse(event.data);
+	  addTX(obj);
+  } else {
+	  addMessage(event.data);
+  }
+};
+
+socket.onclose = function(event) {
+  if (event.wasClean) {
+    console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+  } else {
+    // e.g. server process killed or network down
+    // event.code is usually 1006 in this case
+    console.log('[close] Connection died');
+  }
+};
+
+socket.onerror = function(error) {
+  alert(`[error] ${error.message}`);
+};
+}
+</script>
+</head>
+<body>
+<h1>Node Inspector</h1>
+Host <input type="text" name="host" value="ws://localhost:12001"/> <input type="button" value="Connect" onclick="clk()"/>
+<table id="msgTable">
+<thead>
+<tr>
+	<th>Messages</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+</body>
+</html>
